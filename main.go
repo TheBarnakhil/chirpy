@@ -6,12 +6,18 @@ import (
 )
 
 func main() {
+	const filepathRoot = "."
+	const port = "8080"
+
 	serveMux := http.NewServeMux()
-	server := http.Server{
-		Handler: serveMux,
-		Addr:    ":8080",
-	}
-	fileServer := http.FileServer(http.Dir('.'))
+
+	fileServer := http.FileServer(http.Dir(filepathRoot))
 	serveMux.Handle("/", fileServer)
+
+	server := &http.Server{
+		Handler: serveMux,
+		Addr:    ":" + port,
+	}
+	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(server.ListenAndServe())
 }
