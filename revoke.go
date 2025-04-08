@@ -7,6 +7,7 @@ import (
 )
 
 func (cfg *apiConfig) revokeHandler(rw http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
 	type responseBody struct{}
 
 	token, err := auth.GetBearerToken(req.Header)

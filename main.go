@@ -51,6 +51,7 @@ func main() {
 	serveMux.HandleFunc("POST /api/refresh", apiCfg.refreshHandler)
 
 	serveMux.HandleFunc("POST /api/users", apiCfg.createUser)
+	serveMux.HandleFunc("PUT /api/users", apiCfg.updateUser)
 
 	serveMux.HandleFunc("POST /api/chirps", apiCfg.createChirp)
 	serveMux.HandleFunc("GET  /api/chirps", apiCfg.getAllChirps)

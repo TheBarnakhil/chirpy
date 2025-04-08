@@ -8,6 +8,7 @@ import (
 )
 
 func (cfg *apiConfig) refreshHandler(rw http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
 	type responseBody struct {
 		Token string `json:"token"`
 	}
