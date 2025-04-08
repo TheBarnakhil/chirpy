@@ -58,6 +58,8 @@ func main() {
 	serveMux.HandleFunc("GET  /api/chirps/{chirpID}", apiCfg.getChirpById)
 	serveMux.HandleFunc("DELETE  /api/chirps/{chirpID}", apiCfg.delChirpById)
 
+	serveMux.HandleFunc("POST /api/polka/webhooks", apiCfg.polkaWebhook)
+
 	server := &http.Server{
 		Handler: serveMux,
 		Addr:    ":" + port,
