@@ -129,3 +129,46 @@ func (cfg *apiConfig) getChirpById(rw http.ResponseWriter, req *http.Request) {
 			UserID:    chirp.UserID,
 		}})
 }
+
+func (cfg *apiConfig) delChirpById(rw http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+
+	token, err := auth.GetBearerToken(req.Header)
+	if err != nil {
+		respondWithError(rw, http.StatusUnauthorized, "couldn't get bearer token", err)
+		return
+	}
+
+	id, err := auth.ValidateJWT(token, cfg.secret)
+	if err != nil {
+		respondWithError(rw, http.StatusUnauthorized, "couldn't validate token", err)
+		return
+	}
+
+	type responseBody struct{}
+
+	val, err := uuid.Parse(req.PathValue("chirpID"))
+	if err != nil {
+		respondWithError(rw, http.StatusInternalServerError, "Error parsing chirpId", err)
+		return
+	}
+
+	chirp, err := cfg.db.GetChirpById(req.Context(), val)
+	if err != nil {
+		respondWithError(rw, http.StatusNotFound, "Error retrieving chirp from db", err)
+		return
+	}
+
+	if chirp.UserID != id {
+		respondWithError(rw, http.StatusForbidden, "Error not authorized", err)
+		return
+	}
+
+	err = cfg.db.DeleteChirpById(req.Context(), val)
+	if err != nil {
+		respondWithError(rw, http.StatusNotFound, "Error retrieving chirp from db", err)
+		return
+	}
+
+	respondWithJson(rw, http.StatusNoContent, responseBody{})
+}
