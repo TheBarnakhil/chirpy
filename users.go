@@ -73,7 +73,7 @@ func (cfg *apiConfig) createUser(rw http.ResponseWriter, req *http.Request) {
 func (cfg *apiConfig) updateUser(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
-	token, err := auth.GetBearerToken(req.Header)
+	token, err := auth.GetAuthToken(req.Header)
 	if err != nil {
 		respondWithError(rw, http.StatusUnauthorized, "couldn't get bearer token", err)
 		return

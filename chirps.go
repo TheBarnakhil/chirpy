@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/TheBarnakhil/chirpy/internal/auth"
@@ -18,6 +19,13 @@ type Chirp struct {
 	Body      string    `json:"body"`
 	UserID    uuid.UUID `json:"user_id"`
 }
+
+type chirpSort string
+
+const (
+	ASC  chirpSort = "asc"
+	DESC chirpSort = "desc"
+)
 
 func (cfg *apiConfig) createChirp(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
@@ -39,7 +47,7 @@ func (cfg *apiConfig) createChirp(rw http.ResponseWriter, req *http.Request) {
 		respondWithError(rw, http.StatusInternalServerError, "couldn't unmarshal req body", err)
 	}
 
-	token, err := auth.GetBearerToken(req.Header)
+	token, err := auth.GetAuthToken(req.Header)
 	if err != nil {
 		respondWithError(rw, http.StatusInternalServerError, "couldn't get bearer token", err)
 		return
@@ -81,10 +89,31 @@ func (cfg *apiConfig) createChirp(rw http.ResponseWriter, req *http.Request) {
 func (cfg *apiConfig) getAllChirps(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
-	dbChirps, err := cfg.db.GetAllChirps(req.Context())
-	if err != nil {
-		respondWithError(rw, http.StatusInternalServerError, "Error retrieving chirps from db", err)
-		return
+	author_id := req.URL.Query().Get("author_id")
+	sortParam := req.URL.Query().Get("sort")
+
+	var dbChirps []database.Chirp
+	var err error
+
+	if author_id != "" {
+		author_uuid, err := uuid.Parse(author_id)
+		if err != nil {
+			respondWithError(rw, http.StatusInternalServerError, "Error retrieving chirps from db", err)
+			return
+		}
+
+		dbChirps, err = cfg.db.GetAllChirpsByAuthor(req.Context(), author_uuid)
+		if err != nil {
+			respondWithError(rw, http.StatusInternalServerError, "Error retrieving chirps from db", err)
+			return
+		}
+	} else {
+
+		dbChirps, err = cfg.db.GetAllChirps(req.Context())
+		if err != nil {
+			respondWithError(rw, http.StatusInternalServerError, "Error retrieving chirps from db", err)
+			return
+		}
 	}
 
 	chirps := []Chirp{}
@@ -98,6 +127,11 @@ func (cfg *apiConfig) getAllChirps(rw http.ResponseWriter, req *http.Request) {
 		})
 	}
 
+	if sortParam == string(ASC) {
+		sort.Slice(chirps, func(i, j int) bool { return chirps[i].CreatedAt.Before(chirps[j].CreatedAt) })
+	} else if sortParam == string(DESC) {
+		sort.Slice(chirps, func(i, j int) bool { return chirps[i].CreatedAt.After(chirps[j].CreatedAt) })
+	}
 	respondWithJson(rw, http.StatusOK, chirps)
 }
 
@@ -133,7 +167,7 @@ func (cfg *apiConfig) getChirpById(rw http.ResponseWriter, req *http.Request) {
 func (cfg *apiConfig) delChirpById(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
-	token, err := auth.GetBearerToken(req.Header)
+	token, err := auth.GetAuthToken(req.Header)
 	if err != nil {
 		respondWithError(rw, http.StatusUnauthorized, "couldn't get bearer token", err)
 		return

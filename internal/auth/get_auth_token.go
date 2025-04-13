@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func GetBearerToken(headers http.Header) (string, error) {
+func GetAuthToken(headers http.Header) (string, error) {
 	auth := headers.Get("Authorization")
 
 	if auth == "" {

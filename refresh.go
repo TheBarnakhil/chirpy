@@ -13,7 +13,7 @@ func (cfg *apiConfig) refreshHandler(rw http.ResponseWriter, req *http.Request) 
 		Token string `json:"token"`
 	}
 
-	token, err := auth.GetBearerToken(req.Header)
+	token, err := auth.GetAuthToken(req.Header)
 
 	if err != nil {
 		respondWithError(rw, http.StatusInternalServerError, "Error fetching bearer token", err)

@@ -10,7 +10,7 @@ func (cfg *apiConfig) revokeHandler(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	type responseBody struct{}
 
-	token, err := auth.GetBearerToken(req.Header)
+	token, err := auth.GetAuthToken(req.Header)
 
 	if err != nil {
 		respondWithError(rw, http.StatusInternalServerError, "Error fetching bearer token", err)

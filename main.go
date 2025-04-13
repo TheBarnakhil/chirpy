@@ -17,6 +17,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	secret         string
+	polka          string
 }
 
 func main() {
@@ -36,7 +37,13 @@ func main() {
 	}
 
 	serveMux := http.NewServeMux()
-	apiCfg := &apiConfig{fileServerHits: atomic.Int32{}, db: database.New(db), platform: os.Getenv("PLATFORM"), secret: os.Getenv("SECRET_KEY")}
+	apiCfg := &apiConfig{
+		fileServerHits: atomic.Int32{},
+		db:             database.New(db),
+		platform:       os.Getenv("PLATFORM"),
+		secret:         os.Getenv("SECRET_KEY"),
+		polka:          os.Getenv("POLKA_KEY"),
+	}
 
 	fileServer := http.FileServer(http.Dir(filepathRoot))
 	serveMux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", fileServer)))
